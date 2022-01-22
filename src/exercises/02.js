@@ -2,7 +2,7 @@
 
 // http://localhost:3000/isolated/exercises/02
 
-import React, {useState} from 'react'
+import React from 'react'
 import fetchPokemon from '../fetch-pokemon'
 import {
   ErrorBoundary,
