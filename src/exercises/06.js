@@ -1,7 +1,3 @@
-// Suspense with a custom hook
-
-// http://localhost:3000/isolated/exercises/06
-
 import React from 'react'
 import fetchPokemon, {getImageUrlForPokemon} from '../fetch-pokemon'
 import {
@@ -12,16 +8,6 @@ import {
   PokemonForm,
   PokemonDataView,
 } from '../utils'
-
-// By default, all fetches are mocked so we can control the time easily.
-// You can adjust the fetch time with this:
-// window.FETCH_TIME = 3000
-// If you want to make an actual network call for the pokemon
-// then uncomment the following line
-// window.fetch.restoreOriginalFetch()
-// Note that by doing this, the FETCH_TIME will no longer be considered
-// and if you want to slow things down you should use the Network tab
-// in your developer tools to throttle your network to something like "Slow 3G"
 
 function PokemonInfo({pokemonResource}) {
   const pokemon = pokemonResource.data.read()
@@ -62,25 +48,29 @@ function createPokemonResource(pokemonName) {
   return {data, image}
 }
 
-function App() {
-  const [pokemonName, setPokemonName] = React.useState('')
-  // 🐨 move these two lines to a custom hook called usePokemonResource
-
-  // 🐨 call usePokemonResource with the pokemonName.
-  //    It should return both the pokemonResource and isPending
+function usePokemonResource(pokemonName) {
   const [startTransition, isPending] = React.useTransition(SUSPENSE_CONFIG)
   const [pokemonResource, setPokemonResource] = React.useState(null)
 
+  React.useLayoutEffect(() => {
+    if (!pokemonName) {
+      return
+    }
+    startTransition(() => {
+      setPokemonResource(getPokemonResource(pokemonName))
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pokemonName])
+
+  return [pokemonResource, isPending]
+}
+
+function App() {
+  const [pokemonName, setPokemonName] = React.useState('')
+  const [pokemonResource, isPending] = usePokemonResource(pokemonName)
+
   function handleSubmit(newPokemonName) {
     setPokemonName(newPokemonName)
-    // 🐨 move this startTransition call to a useLayoutEffect inside your
-    //    custom usePokemonResource hook (it should list pokemonName as a
-    //    dependency).
-    startTransition(() => {
-      setPokemonResource(getPokemonResource(newPokemonName))
-    })
-    // 💰 tip: in your effect callback, if pokemonName is an empty string,
-    //    return early.
   }
 
   return (
@@ -103,18 +93,5 @@ function App() {
     </div>
   )
 }
-
-/*
-🦉 Elaboration & Feedback
-After the instruction, copy the URL below into your browser and fill out the form:
-http://ws.kcd.im/?ws=Concurrent%20React&e=Suspense%20with%20a%20custom%20hook&em=
-*/
-
-////////////////////////////////////////////////////////////////////
-//                                                                //
-//                 Don't make changes below here.                 //
-// But do look at it to see how your code is intended to be used. //
-//                                                                //
-////////////////////////////////////////////////////////////////////
 
 export default App
