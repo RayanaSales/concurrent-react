@@ -8,16 +8,29 @@ import {fetchUser} from '../fetch-pokemon'
 const delay = time => promiseResult =>
   new Promise(resolve => setTimeout(() => resolve(promiseResult), time))
 
-const NavBar = React.lazy(() =>
+function preloadableLazy(dynamicImport) {
+  let promise
+  function load() {
+    if (!promise) {
+      promise = dynamicImport()
+    }
+    return promise
+  }
+  const Comp = React.lazy(dynamicImport)
+  Comp.preload = load
+  return Comp
+}
+
+const NavBar = preloadableLazy(() =>
   import('../suspense-list/nav-bar').then(delay(500)),
 )
-const LeftNav = React.lazy(() =>
+const LeftNav = preloadableLazy(() =>
   import('../suspense-list/left-nav').then(delay(2000)),
 )
-const MainContent = React.lazy(() =>
+const MainContent = preloadableLazy(() =>
   import('../suspense-list/main-content').then(delay(5000)),
 )
-const RightNav = React.lazy(() =>
+const RightNav = preloadableLazy(() =>
   import('../suspense-list/right-nav').then(delay(1000)),
 )
 
@@ -35,6 +48,10 @@ function App() {
   function handleSubmit(pokemonName) {
     startTransition(() => {
       setPokemonResource(createResource(() => fetchUser(pokemonName)))
+      NavBar.preload()
+      LeftNav.preload()
+      MainContent.preload()
+      RightNav.preload()
     })
   }
 
